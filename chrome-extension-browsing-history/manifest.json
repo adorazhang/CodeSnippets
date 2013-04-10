@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+
+  "name": "Browsing History",
+  "description": "Ranks history urls in a descending order according to visit times.",
+  "version": "1.0",
+
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "history"
+  ]
+}
