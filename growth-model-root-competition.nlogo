@@ -41,8 +41,10 @@ to setup
 ;    set x x + (world-height / n ^ (1 / 2)) * (3 ^ (1 / 2))
 ;  ]
 
-    
-  let filename "results.txt"
+  let filename ""
+  ifelse mutation = True
+  [ set filename "find-optimal-A-with-mutation.txt" ]
+  [ set filename "find-optimal-A-without-mutation.txt" ]
   if file-exists? filename
   [ file-delete filename ]
   file-open filename
@@ -67,8 +69,8 @@ to print-generation-info
   let plants patches with [ pcolor = green or pcolor = red ]
   ifelse mutation = True
   [    
-    let mutated-plant-yield [yield] of patch xid yid
-    let average-yield [yield] of plants
+    let mutated-plant-yield mutated-plant-yield-sum / replicates
+    let average-yield mean-yield-sum / replicates
     
     file-type precision average-yield 0
     file-type ", "
@@ -252,22 +254,21 @@ to go
   
   ifelse mutation = True
   [
-    generate-random-A
     check-if-apply-mutation
-    
     set mean-yield-sum 0
     set mutated-plant-yield-sum 0
+    generate-random-A
     
     repeat replicates
     [
       reseeding
       initialization
+      pick-a-random-plant-and-mutate
       one-generation
       print-generation-info
       let plants patches with [ pcolor = green or pcolor = red ]
       set mean-yield-sum ( mean-yield-sum + ( mean [yield] of plants ) )
       set mutated-plant-yield-sum ( mutated-plant-yield-sum + ( [yield] of patch xid yid ) )
-      pick-a-random-plant-and-mutate
     ]
     ;print-file
   ]
@@ -460,7 +461,7 @@ INPUTBOX
 370
 237
 number-of-As
-20
+10
 1
 0
 Number
@@ -524,7 +525,7 @@ SWITCH
 137
 mutation
 mutation
-1
+0
 1
 -1000
 
@@ -560,7 +561,7 @@ INPUTBOX
 181
 452
 A
-1
+1.992645255008359
 1
 0
 Number
@@ -571,7 +572,7 @@ INPUTBOX
 179
 524
 step-length
-0.1
+0.03
 1
 0
 Number
