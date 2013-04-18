@@ -6,7 +6,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-globals [ xid yid mean-yield mutated-plant-yield mutatedA ]
+globals [ xid yid mean-yield mutated-plant-yield mutatedA flag ]
 
 ;; direction: bool; True -> left, increase A
 ;;                  False -> right, decrease A
@@ -45,22 +45,19 @@ to setup
 ;    set x x + (world-height / n ^ (1 / 2)) * (3 ^ (1 / 2))
 ;  ]
 
-  let filename ""
-  ifelse mutation = True
-  [ set filename "find-optimal-A-with-random-mutation.txt" ]
-  [ set filename "find-optimal-A-without-mutation.txt" ]
-  if file-exists? filename
-  [ file-delete filename ]
+  if filename = ""
+  [ set filename "s--with-mutation.txt" ]
+;  if file-exists? filename
+;  [ file-delete filename ]
   file-open filename
   ;; print heading
-  ifelse mutation = True
-  [ file-print "Mean Yield, Mutated Yield, Global A, Mutated Plant A" ]
-  [ file-print "Mean Yield, Global A" ]
+  file-print "Mean Yield, Mutated Yield, Global A, Mutated Plant A"
   ask patches [set pcolor white] ;; background color
   
   set mutatedA 0
   set xid 0
   set yid 0
+  set flag True
   
 end
 
@@ -69,22 +66,14 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to print-file
-  
-  ifelse mutation = True
-  [        
-    file-type precision mean-yield 0
-    file-type ", "
-    file-type precision mutated-plant-yield 0
-    file-type ", "
-    file-type A
-    file-type ", "
-    file-print mutatedA
-  ]
-  [
-    file-type precision mean-yield 0
-    file-type ", "
-    file-print A
-  ]
+        
+  file-type precision mean-yield 0
+  file-type ", "
+  file-type precision mutated-plant-yield 0
+  file-type ", "
+  file-type A
+  file-type ", "
+  file-print mutatedA
 
 end
 
@@ -173,41 +162,20 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-to generate-a-random-A
-
-  let t random-normal A step-length
-  
-  while [ t < 0 ]
-  [ set t random-normal A step-length ]
-  
-  set mutatedA t
-  
-end
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-to check-if-apply-mutation
-  
-  if mutated-plant-yield > mean-yield
-  [
-    set A mutatedA
-  ]
-  
-end
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 to go-with-mutation
+  
+  if mutatedA != 0
+  [ set A mutatedA ]
   
   set mean-yield 0
   set mutated-plant-yield 0
-  let mean-sum 0
-  let mutated-sum 0
   
-  generate-a-random-A
+  ;calculate with a plant mutation of an increased A
+  
+  let mutated-A-1 ( A + step-length )
+  set mutatedA mutated-A-1
+  let mean-sum-1 0
+  let mutated-sum-1 0
   
   repeat replicates
   [
@@ -216,39 +184,76 @@ to go-with-mutation
     pick-a-random-plant-and-mutate
     one-generation
     let plants patches with [ pcolor = green ]
-    set mean-sum ( mean-sum + ( mean [yield] of plants ) )
-    set mutated-sum ( mutated-sum + ( [yield] of patch xid yid ) )
+    set mean-sum-1 ( mean-sum-1 + ( mean [yield] of plants ) )
+    set mutated-sum-1 ( mutated-sum-1 + ( [yield] of patch xid yid ) )
   ]
-  set mean-yield mean-sum / replicates
-  set mutated-plant-yield mutated-sum / replicates
   
-  print-file
-  check-if-apply-mutation
+  let mean-1 mean-sum-1 / replicates
+  let mutated-1 mutated-sum-1 / replicates
   
-end
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-to go-without-mutation
+    show "->"
+    show mean-1
+    show mutated-1
   
-  let mean-yield-sum 0
-  set mean-yield 0
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+  ;calculate with a plant mutation of an decreased A
+  
+  let mutated-A-2 ( A - step-length )
+  set mutatedA mutated-A-2
+  let mean-sum-2 0
+  let mutated-sum-2 0
   
   repeat replicates
   [
     reseeding
     initialization
+    pick-a-random-plant-and-mutate
     one-generation
     let plants patches with [ pcolor = green ]
-    set mean-yield-sum ( mean-yield-sum + mean [yield] of plants )
+    set mean-sum-2 ( mean-sum-2 + ( mean [yield] of plants ) )
+    set mutated-sum-2 ( mutated-sum-2 + ( [yield] of patch xid yid ) )
   ]
   
-  set mean-yield mean-yield-sum / replicates
+  let mean-2 mean-sum-2 / replicates
+  let mutated-2 mutated-sum-2 / replicates
+  
+    show "<-"
+    show mean-2
+    show mutated-2
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+  
+  set flag False
+  
+  ifelse mutated-1 > mutated-2
+  [
+    if mutated-1 > mean-1
+    [ 
+      set flag True
+      set mutatedA mutated-A-1
+      set mean-yield mean-1
+      set mutated-plant-yield mutated-1
+    ]
+  ]
+  [
+    if mutated-2 > mean-2
+    [
+      set flag True
+      set mutatedA mutated-A-2
+      set mean-yield mean-2
+      set mutated-plant-yield mutated-2
+    ] 
+  ]
+  
+  if flag = False
+  [
+    file-close
+    stop
+  ]
   
   print-file
-  set A A + step-length
   
 end
 
@@ -258,23 +263,12 @@ end
 
 to go
   
-  ifelse mutation = True
-  [  
-    if ticks = time * number-of-As * replicates
-    [ 
-      file-close
-      stop
-    ]
-    go-with-mutation
+  if ( ticks = time * number-of-As * replicates * 2 ) or flag = False
+  [ 
+    file-close
+    stop
   ]
-  [  
-    if ticks = time * number-of-As * replicates
-    [ 
-      file-close
-      stop
-    ]
-    go-without-mutation
-  ]
+  go-with-mutation
 
 end
 
@@ -415,7 +409,7 @@ BUTTON
 224
 266
 362
-302
+299
 NIL
 go
 T
@@ -449,7 +443,7 @@ INPUTBOX
 101
 387
 number-of-As
-10
+10000
 1
 0
 Number
@@ -506,17 +500,6 @@ shoot-asymmetric
 0
 Number
 
-SWITCH
-262
-176
-358
-209
-mutation
-mutation
-0
-1
--1000
-
 INPUTBOX
 120
 242
@@ -560,7 +543,7 @@ INPUTBOX
 362
 386
 step-length
-0.1
+0.03
 1
 0
 Number
@@ -585,6 +568,17 @@ TEXTBOX
 12
 0.0
 1
+
+INPUTBOX
+27
+473
+359
+533
+filename
+s-0.5-with-mutation.txt
+1
+0
+String
 
 @#$#@#$#@
 ## WHAT IS IT?

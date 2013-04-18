@@ -45,10 +45,12 @@ to setup
 ;    set x x + (world-height / n ^ (1 / 2)) * (3 ^ (1 / 2))
 ;  ]
 
-  let filename ""
-  ifelse mutation = True
-  [ set filename "find-optimal-A-with-mutation.txt" ]
-  [ set filename "find-optimal-A-without-mutation.txt" ]
+  if filename = ""
+  [
+    ifelse mutation = True
+    [ set filename "find-optimal-A-with-mutation.txt" ]
+    [ set filename "find-optimal-A-without-mutation.txt" ]
+  ]
   if file-exists? filename
   [ file-delete filename ]
   file-open filename
@@ -591,7 +593,7 @@ INPUTBOX
 289
 386
 A
-2.5000000000000004
+2.01
 1
 0
 Number
@@ -602,7 +604,7 @@ INPUTBOX
 362
 386
 step-length
-0.1
+0.03
 1
 0
 Number
@@ -627,6 +629,17 @@ TEXTBOX
 12
 0.0
 1
+
+INPUTBOX
+78
+473
+287
+533
+filename
+find-optimal-A-with-mutation.txt
+1
+0
+String
 
 @#$#@#$#@
 ## WHAT IS IT?
