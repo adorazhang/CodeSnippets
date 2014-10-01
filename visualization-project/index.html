@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html class="ocks-org do-not-copy">
+<meta charset="utf-8">
+<title>Visualization of Settlement Change in the Chifeng Region
+	(Northeastern China)</title>
+<style>
+@import url(style.css);
+
+#chart {
+	margin-left: -40px;
+	height: 506px;
+}
+
+text {
+	font: 10px sans-serif;
+}
+
+.dot {
+	stroke: #000;
+}
+
+.axis path,.axis line {
+	fill: none;
+	stroke: #5FA9DA;
+	shape-rendering: crispEdges;
+}
+
+#detail circle {
+	stroke: lightsteelblue; /*#19BEBE*/
+	fill: lightgray; /*#EBFF00*/
+}
+
+.label {
+	fill: #777;
+}
+
+.year.label {
+	font: 500 100px "Helvetica Neue";
+	fill: #ddd;
+}
+
+.year.label.active {
+	fill: #aaa;
+}
+
+.overlay {
+	fill: none;
+	pointer-events: all;
+	cursor: ew-resize;
+}
+
+#overview .ovblk {
+	position: relative;
+	width: 70px;
+	height: 65px;
+	background: black;
+	opacity: 0.15;
+}
+
+#overviewOverlay .olblk {
+	position: relative;
+	width: 70px;
+	height: 65px;
+}
+</style>
+
+<header>
+	<!-- 	<aside>March 13, 2012</aside> -->
+	<!-- 	<a href="../" rel="author">Mike Bostock</a> -->
+</header>
+
+<h2>Visualization of Settlement Change in the Chifeng Region
+	(Northeastern China)</h2>
+<div id="detail"
+	style="position: absolute; width: 280px; height: 220px; margin-left: 705px; margin-top: 20px;"></div>
+<div id="overview"
+	style="position: absolute; width: 280px; height: 260px; margin-left: 720px; margin-top: 300px; background-image: url(bg.png); background-repeat: no-repeat; background-position: center;">
+	<div id="b13" class="ovblk" style=""></div>
+	<div id="b9" class="ovblk" style=""></div>
+	<div id="b5" class="ovblk" style=""></div>
+	<div id="b1" class="ovblk" style=""></div>
+	<div id="b14" class="ovblk"
+		style="margin-top: -260px; margin-left: 70px;"></div>
+	<div id="b10" class="ovblk" style="margin-left: 70px;"></div>
+	<div id="b6" class="ovblk" style="margin-left: 70px;"></div>
+	<div id="b2" class="ovblk" style="margin-left: 70px;"></div>
+	<div id="b15" class="ovblk"
+		style="margin-top: -260px; margin-left: 140px;"></div>
+	<div id="b11" class="ovblk" style="margin-left: 140px;"></div>
+	<div id="b7" class="ovblk" style="margin-left: 140px;"></div>
+	<div id="b3" class="ovblk" style="margin-left: 140px;"></div>
+	<div id="b16" class="ovblk"
+		style="margin-top: -260px; margin-left: 210px;"></div>
+	<div id="b12" class="ovblk" style="margin-left: 210px;"></div>
+	<div id="b8" class="ovblk" style="margin-left: 210px;"></div>
+	<div id="b4" class="ovblk" style="margin-left: 210px; display: none;"></div>
+</div>
+<div id="overviewOverlay"
+	style="position: absolute; width: 280px; height: 260px; margin-left: 720px; margin-top: 300px; background-image: url(bgo.png); background-repeat: no-repeat; background-position: center;">
+	<div id="o13" class="olblk" style=""></div>
+	<div id="o9" class="olblk" style=""></div>
+	<div id="o5" class="olblk" style=""></div>
+	<div id="o1" class="olblk" style=""></div>
+	<div id="o14" class="olblk"
+		style="margin-top: -260px; margin-left: 70px;"></div>
+	<div id="o10" class="olblk" style="margin-left: 70px;"></div>
+	<div id="o6" class="olblk" style="margin-left: 70px;"></div>
+	<div id="o2" class="olblk" style="margin-left: 70px;"></div>
+	<div id="o15" class="olblk"
+		style="margin-top: -260px; margin-left: 140px;"></div>
+	<div id="o11" class="olblk" style="margin-left: 140px;"></div>
+	<div id="o7" class="olblk" style="margin-left: 140px;"></div>
+	<div id="o3" class="olblk" style="margin-left: 140px;"></div>
+	<div id="o16" class="olblk"
+		style="margin-top: -260px; margin-left: 210px;"></div>
+	<div id="o12" class="olblk" style="margin-left: 210px;"></div>
+	<div id="o8" class="olblk" style="margin-left: 210px;"></div>
+	<div id="o4" class="olblk" style="margin-left: 210px; display: none;"></div>
+</div>
+<p id="chart"></p>
+
+<!-- <aside>Mouseover the year to move forward and backwards through -->
+<!-- 	time.</aside> -->
+
+<!-- <p class="attribution"> -->
+<!-- 	Source: <a href="https://github.com/RandomEtc/mind-gapper-js">Tom -->
+<!-- 		Carden</a>, <a href="http://gapminder.org">Gapminder</a>. -->
+<!-- <p> -->
+<!-- 	This is a recreation in <a href="http://d3js.org/">D3</a> of -->
+<!-- 	Gapminder’s <a href="http://gapminder.org/world/">Wealth & Health -->
+<!-- 		of Nations</a>, made famous by Hans Rosling’s memorable <a -->
+<!-- 		href="http://www.ted.com/talks/hans_rosling_shows_the_best_stats_you_ve_ever_seen.html">2006 -->
+<!-- 		TED talk</a>. It shows the dynamic fluctuation in per-capita income (<i>x</i>), -->
+<!-- 	life expectancy (<i>y</i>) and population (radius) of 180 nations over -->
+<!-- 	the last 209 years. Nations are colored by geographic region; mouseover -->
+<!-- 	to read their names. -->
+<!-- <p> -->
+<!-- 	As <a href="http://randometc.github.com/mind-gapper-js/">Tom Carden</a> -->
+<!-- 	noted, there’s a surprising amount of work that goes into making -->
+<!-- 	something look simple. For one, data collected in recent years is -->
+<!-- 	consistent, while data prior to 1950 is sparse; although potentially -->
+<!-- 	misleading, these visualizations use <a -->
+<!-- 		href="http://en.wikipedia.org/wiki/Lerp_(computing)">linear -->
+<!-- 		interpolation</a> for missing data points. The lookup for the two -->
+<!-- 	interpolation values at each frame is accelerated using <a -->
+<!-- 		href="http://en.wikipedia.org/wiki/Binary_search_algorithm">bisection</a> -->
+<!-- 	of sorted arrays per dimension. -->
+<!-- <p> -->
+<!-- 	Interested to see how this chart was implemented? <a -->
+<!-- 		href="https://github.com/mbostock/bost.ocks.org/blob/gh-pages/mike/nations/index.html">View -->
+<!-- 		source!</a> Want a fun project? Try adding a <a -->
+<!-- 		href="https://github.com/mbostock/d3/wiki/Voronoi-Geom">Voronoi -->
+<!-- 		overlay</a> (as in this <a -->
+<!-- 		href="http://mbostock.github.com/d3/talk/20111116/airports.html">airport -->
+<!-- 		diagram</a>) to improve mouseover interaction on small targets. Or try a -->
+<!-- 	static version, using trails instead of motion. -->
+<!-- <footer> -->
+<!-- 	<aside>March 13, 2012</aside> -->
+<!-- 	<a href="../" rel="author">Mike Bostock</a> -->
+<!-- </footer> -->
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="jquery-1.11.0.js"></script>
+
+<script>
+	k2all = {};
+	s2k = {};
+	gp2sk = {};
+	cood = []//{};
+	gps = [];
+	counts = {};
+	ksd = {};
+	em = ["xlw", "zbg", "hs", "xhy", "lxjd", "uxjd", "zg_h", "l", "modern",
+			"unk"];
+	emn = ["Xinglongwa", "Zhaobaogou", "Hongshan", "Xiaoheyan",
+			"Lower Xiajiadian", "Upper Xiajiadian", "Zhanguo-Han", "Liao",
+			"Modern", "Unknown"];
+	emy = [-6000, -5250, -4500, -3000, -2000, -1200, -600, -200, 1300, 2014];
+	secv = {};
+	minmax = {};
+	ddata = {};
+
+	function getNameFromYear(y) {
+		for ( var i in emy)
+			if (emy[i] == y)
+				return emn[i];
+		return emn[9];
+	}
+
+	// Chart dimensions.
+	var margin = {
+		top : 19.5,
+		right : 19.5,
+		bottom : 19.5,
+		left : 39.5
+	}, width = 720 - margin.right, height = 600 - margin.top;
+	//- margin.bottom;
+
+	//var j = jQuery.noConflict();
+
+	queue().defer(d3.csv, "keyxy.csv", function(d) {
+
+		// 		cood[d.key]['x'] = +d.x;
+		// 		cood[d.key]['y'] = +d.y;
+		cood.push({
+			key : d.key.toUpperCase(),
+			x : +d.x,
+			y : +d.y
+		});
+	}).defer(d3.csv, "groups.csv", function(d) {
+		// 		gps[d.key]['gp'] = +d.gp;
+		gps.push({
+			gp : d.group
+		});
+	}).defer(d3.csv, "keycounts.csv", function(d) {
+		var temp = {};
+		temp['total'] = +d.total;
+		temp['unk'] = +d.unk;
+		temp['modern'] = +d.modern;
+		temp['xlw'] = +d.xlw;
+		temp['zbg'] = +d.zbg;
+		temp['hs'] = +d.hs;
+		temp['xhy'] = +d.xhy;
+		temp['lxjd'] = +d.lxjd;
+		temp['uxjd'] = +d.uxjd;
+		temp['zg_h'] = +d.zg_h;
+		temp['l'] = +d.l;
+		counts[d.key.toUpperCase()] = temp;
+	}).defer(d3.csv, "keysitedetails.csv", function(d) {
+		var temp = {};
+		temp['sno'] = d.sno;
+		temp['sv'] = d.sv;
+		temp['cm'] = d.cm;
+		temp['noc'] = function(d) {
+			if (d.noc)
+				return +d.noc; //Number of Circles
+			else
+				return 0;
+		};
+		temp['rm'] = d.rm;
+		ksd[d.key.toUpperCase()] = temp;
+	}).defer(d3.csv, "groupsminmax.csv", function(d) {
+		minmax[d.gp] = {
+			xmin : +d.xmin,
+			xmax : +d.xmax,
+			ymin : +d.ymin,
+			ymax : +d.ymax
+		};
+	}).await(ready);
+
+	function ready(error) {
+		// Generate data records and indexes
+		jQuery.each(cood, function(i, v) {
+			//v['gp'] = gps[i]['gp'];
+			//jQuery('div#test').append('<p>'+v['key']+' '+v['x']+' '+v['y']+' '+v['gp']+' '+v['key'].length+'</p>');
+			if (v['key'].length == 6) {
+				var temp = {};
+				temp['x'] = v['x'];
+				temp['y'] = v['y'];
+				temp['gp'] = gps[i]['gp'];
+				//if(ksd[v['key']]==undefined)
+				//	alert(v['key']);
+				temp['sno'] = ksd[v['key']]['sno'];
+				temp['sv'] = ksd[v['key']]['sv'];
+				temp['cm'] = ksd[v['key']]['cm'];
+				temp['noc'] = ksd[v['key']]['noc'];
+				temp['rm'] = ksd[v['key']]['rm'];
+
+				temp['xlw'] = counts[v['key']]['xlw'];
+				temp['zbg'] = counts[v['key']]['zbg'];
+				temp['hs'] = counts[v['key']]['hs'];
+				temp['xhy'] = counts[v['key']]['xhy'];
+				temp['lxjd'] = counts[v['key']]['lxjd'];
+				temp['uxjd'] = counts[v['key']]['uxjd'];
+				temp['zg_h'] = counts[v['key']]['zg_h'];
+				temp['l'] = counts[v['key']]['l'];
+				temp['modern'] = counts[v['key']]['modern'];
+				temp['unk'] = counts[v['key']]['unk'];
+
+				k2all[v['key']] = temp;
+				if (s2k[temp['sno']]) {
+					s2k[temp['sno']]['ks'].push(v['key']);
+				} else {
+					var temp1 = {};
+					temp1['x'] = 0;
+					temp1['y'] = 0;
+					temp1['gp'] = undefined;
+					temp1['ks'] = [v['key']];
+					s2k[temp['sno']] = temp1;
+				}
+
+			} else {
+				if (s2k[v['key']]) {
+					s2k[v['key']]['x'] = v['x'];
+					s2k[v['key']]['y'] = v['y'];
+					s2k[v['key']]['gp'] = gps[i]['gp'];
+				} else {
+					var temp = {};
+					temp['x'] = v['x'];
+					temp['y'] = v['y'];
+					temp['ks'] = [];
+					temp['gp'] = gps[i]['gp'];
+					s2k[v['key']] = temp;
+				}
+
+				if (gp2sk[gps[i]['gp']]) {
+					gp2sk[gps[i]['gp']].push(v['key']);
+				} else {
+					gp2sk[gps[i]['gp']] = [v['key']];
+				}
+			}
+		});
+
+		//cood = []//{};
+		//gps = [];
+		//counts = {};
+		//ksd = {};
+
+		// Various accessors that specify the four dimensions of data to visualize.
+		function x(d) {
+			return d.x;
+		} // [] d.income; }
+		function y(d) {
+			return d.y;
+		} // [] d.lifeExpectancy; }
+		function radius(d) {
+			return d.cts;
+		}//d.population; }
+		function color(d) {
+			return d.gp;
+		}//region; }
+		function key(d) {
+			return d.sno;
+		}//name; }
+
+		// Generate data based on group provided
+		function generateData(group) {
+			xScale = d3.scale.linear().domain(
+					[minmax['' + group]['xmin'] - 5,
+							minmax['' + group]['xmax'] + 5]).range([0, width])
+			yScale = d3.scale.linear().domain(
+					[minmax['' + group]['ymin'] - 5,
+							minmax['' + group]['ymax'] + 5]).range([height, 0]);
+			var da = [];
+			if (group != '0') {
+				for ( var gk in gp2sk['' + group]) {
+					var t = {};
+					t["sno"] = gp2sk['' + group][gk];
+					t["gp"] = '' + group;
+					var xx = s2k['' + t["sno"]]['x'];
+					var yy = s2k['' + t["sno"]]['y'];
+					var xa = [];
+					var ya = [];
+
+					//for ( var sk in s2k['' + t["sno"]]['ks']) {
+					var tm = [];
+
+					for (var i = 1; i < 11; i++) {
+						xa.push([i, xx]);
+						ya.push([i, yy]);
+						tm.push([emy[i - 1],
+								countTotalOfTime(i, s2k['' + t["sno"]]['ks'])]);
+					}
+					t["x"] = xa;
+					t["y"] = ya;
+					t["cts"] = tm;
+					//}
+					da.push(t);
+				}
+			} else {
+				for (var g = 1; g < 17; g++) {
+					if (gp2sk['' + g]) {
+						for ( var gk in gp2sk['' + g]) {
+							var t = {};
+							t["sno"] = gp2sk['' + g][gk];
+							t["gp"] = '' + g;
+							var xx = s2k['' + t["sno"]]['x'];
+							var yy = s2k['' + t["sno"]]['y'];
+							var xa = [];
+							var ya = [];
+
+							//for ( var sk in s2k['' + t["sno"]]['ks']) {
+							var tm = [];
+
+							for (var i = 1; i < 11; i++) {
+								xa.push([i, xx]);
+								ya.push([i, yy]);
+								tm.push([
+										emy[i - 1],
+										countTotalOfTime(i,
+												s2k['' + t["sno"]]['ks'])]);
+							}
+							t["x"] = xa;
+							t["y"] = ya;
+							t["cts"] = tm;
+							//}
+							da.push(t);
+						}
+					}
+				}
+			}
+			return da;
+		}
+
+		// Sum up number of fragments of specific time given
+		function countTotalOfTime(time, ks) {
+			var sum = 0;
+			for ( var i in ks) {
+				sum += k2all[ks[i]][em[time - 1]];
+			}
+			return sum;
+		}
+
+		blkSelected = "";
+
+		function gendata(secv) {
+			var t = {};
+			var tmp = {};
+			for (i in secv) {
+				//if (i==10) {break;}
+				t['' + secv['' + i]['sno']] = secv['' + i]['cts'];
+			}
+			return t;
+		}
+
+		jQuery('.olblk').on('mouseover', function() {
+			var v = jQuery(this).attr('id');
+			jQuery('#b' + v.substring(1, v.length)).fadeTo(200, 0);
+		}).on('mouseleave', function() {
+			var v = jQuery(this).attr('id');
+			if (v != blkSelected)
+				jQuery('#b' + v.substring(1, v.length)).fadeTo(200, 0.15);
+		}).on('click', function() {
+			var v = jQuery(this).attr('id');
+			if (v != blkSelected) {
+				if (blkSelected != "") {
+					blkSelected = jQuery(this).attr('id');
+					jQuery('.olblk').trigger("mouseleave");
+				} else
+					blkSelected = jQuery(this).attr('id');
+				//group
+				jQuery('#chart').fadeTo(200, 0, function() {
+					d3.select('#chart').select('svg').transition().duration(0);
+					jQuery('#chart').empty();
+					oneGroup(v.substring(1, v.length));
+					jQuery('#chart').fadeTo(200, 1);
+				});
+
+			} else {
+				blkSelected = "";
+				//0
+				jQuery('#chart').fadeTo(200, 0, function() {
+					d3.select('#chart').select('svg').transition().duration(0);
+					jQuery('#chart').empty();
+					oneGroup('0');
+					jQuery('#chart').fadeTo(200, 1);
+				});
+			}
+		});
+
+		// 		var str="";
+		// 		for(var u=0;u<152;u++)
+		// 			if(secv[u]['cts'][0][1]==1)
+		// 			str+=+" "+secv[u]['cts'][0][1]+" "+secv[u]['x'][0]+" "+secv[u]['y'][0]+"\n" ;
+		// 		alert(str);
+
+		// Various scales. These domains make assumptions of data, naturally.
+		var xScale = d3.scale.linear().domain([626, 640]).range([0, width])
+		var yScale = d3.scale.linear().domain([4661, 4685]).range([height, 0]);
+
+		oneGroup('0');
+
+		function oneGroup(g) {
+
+			var radiusScale = d3.scale.sqrt().domain([0, 60000])
+					.range([0, 500]);
+			var colorScale = d3.scale.category20();
+
+			secv = generateData(g);
+			ddata = gendata(secv);
+
+			// The x & y axes.
+			var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12,
+					d3.format(",d"));
+			var yAxis = d3.svg.axis().scale(yScale).ticks(12, d3.format(",d"))
+					.orient("left");
+
+			// A bisector since many nation's data is sparsely-defined.
+			var bisect = d3.bisector(function(d) {
+				return d[0];
+			});
+
+			// Create the SVG container and set the origin.
+			var svg = d3.select("#chart").append("svg").attr("width",
+					width + margin.left + margin.right).attr("height",
+					height + margin.top + margin.bottom).append("g").attr(
+					"transform",
+					"translate(" + margin.left + "," + margin.top + ")");
+			// 		d3.select("#chart").select("svg").insert("image",":first-child").attr("xlink:href", "bg-1.png").attr("width", 845)
+			// 				.attr("height", 720);
+			// Add the x-axis.
+			svg.append("g").attr("class", "x axis").attr("transform",
+					"translate(0," + height + ")").call(xAxis);
+
+			// Add the y-axis.
+			svg.append("g").attr("class", "y axis").call(yAxis);
+
+			// Add an x-axis label.
+			svg.append("text").attr("class", "x label").attr("text-anchor",
+					"end").attr("x", width).attr("y", height - 6).text("X");
+
+			// Add a y-axis label.
+			svg.append("text").attr("class", "y label").attr("text-anchor",
+					"end").attr("y", 6).attr("dy", ".75em").attr("transform",
+					"rotate(-90)").text("Y");
+
+			// Add the year label; the value is set on transition.
+			var label = svg.append("text").attr("class", "year label").attr(
+					"text-anchor", "end").attr("y", height - 24).attr("x",
+					width)
+			//.text(-6000);
+			.text(6000 + " B.C.");
+
+			xScale2 = d3.scale.linear().domain([1, 10]).range([50, 280]);
+
+			//var circleSelected = 0;
+			var circleText="";
+
+			// Add a dot per nation. Initialize the data at 1800, and set the colors.
+			var dot = svg
+					.append("g")
+					.attr("class", "dots")
+					.selectAll(".dot")
+					.data(interpolateData(-6000))
+					.enter()
+					.append("circle")
+					.attr("class", "dot")
+					.on(
+							"click",
+							function(dot) {
+								
+								if (circleText != d3.select(this).select(
+										"title").text())
+									circleText = d3.select(this)
+											.select("title").text();
+								else
+									circleText = "";
+								d3.select(this).on("mouseleave")();
+								d3.selectAll("#detail").selectAll("svg")
+										.remove();
+
+								var mmax = -1;
+								for (i in ddata['' + dot.sno]) {
+									if (ddata['' + dot.sno][i][1] > mmax)
+										mmax = ddata['' + dot.sno][i][1];
+								}
+								yScale2 = d3.scale.linear().domain([0, mmax])
+										.range([210, 20]);
+
+								var detail = d3.selectAll("#detail").append(
+										"svg:svg").attr("width", 300).attr(
+										"height", 240).append("g").attr(
+										"transform",
+										"translate(" + -15 + "," + 0 + ")");
+
+								xAxisDe = d3.svg.axis().orient("bottom").scale(
+										xScale2).ticks(10, d3.format(",d"));
+								yAxisDe = d3.svg.axis().scale(yScale2).ticks(5,
+										d3.format(",d")).orient("left");
+
+								detail.append("g").attr("class", "x axis")
+										.attr(
+												"transform",
+												"translate(0," + (240 - 30)
+														+ ")").call(xAxisDe);
+								detail.append("g").attr("class", "y axis")
+										.attr("transform",
+												"translate(" + 50 + ",0)")
+										.call(yAxisDe);
+
+								detail.append("rect").attr("id", "detailTip")
+										.attr("width", "100").attr("height",
+												"50").attr("fill", "lightgray")
+										.attr("stroke", "gray").attr("opacity",
+												"0");
+								detail.append("text").attr("id", "detailName")
+										.attr("text-anchor", "start").attr(
+												"opacity", "0").text("");
+								detail.append("text").attr("id", "detailCood")
+										.attr("text-anchor", "start").attr(
+												"opacity", "0").text("");
+
+								detail
+										.selectAll("circle")
+										.data(ddata['' + dot.sno])
+										.enter()
+										.append("circle")
+										.attr("cx", function(d, i) {
+											return xScale2(i + 1);
+										})
+										.attr("cy", function(d) {
+											return yScale2(d[1]);
+										})
+										.attr("r", function(d) {
+											return 3;
+										})
+										.on(
+												"mouseover",
+												function(d) {
+													//stroke: lightsteelblue; /*#19BEBE*/
+													//fill: lightgray;		/*#EBFF00*/
+													d3.select(this)
+															.transition().attr(
+																	"r", "5")
+															.style("stroke",
+																	"#19BEBE")
+															.style("fill",
+																	"#EBFF00");
+													var cxx = parseFloat(d3
+															.select(this).attr(
+																	"cx"));
+													var cyy = parseFloat(d3
+															.select(this).attr(
+																	"cy"));
+
+													if (cxx + 100 > 280)
+														cxx -= 100;
+													if (cyy + 50 > 210)
+														cyy -= 50;
+
+													d3.select("#detailTip")
+															.style("opacity",
+																	"0")
+															.transition().attr(
+																	"x", cxx)
+															.attr("y", cyy)
+															.style("opacity",
+																	"0.6");
+													d3
+															.select(
+																	"#detailName")
+															.style("opacity",
+																	"0")
+															.transition()
+															.attr("x", cxx + 10)
+															.attr("y", cyy + 20)
+															.style("opacity",
+																	"0.8")
+															.text(
+																	getNameFromYear(d[0]));
+													d3
+															.select(
+																	"#detailCood")
+															.style("opacity",
+																	"0")
+															.transition()
+															.attr("x", cxx + 10)
+															.attr("y", cyy + 40)
+															.style("opacity",
+																	"0.8")
+															.text(d[1]);
+
+												})
+										.on(
+												"mouseleave",
+												function() {
+													d3
+															.select(this)
+															.transition()
+															.attr("r", "3")
+															.style("stroke",
+																	"lightsteelblue")
+															.style("fill",
+																	"lightgray");
+													d3.select("#detailTip")
+															.transition()
+															.style("opacity",
+																	"0");
+													d3.select("#detailName")
+															.transition()
+															.style("opacity",
+																	"0");
+													d3.select("#detailCood")
+															.transition()
+															.style("opacity",
+																	"0");
+												});
+
+							})
+					.on(
+							'mouseover',
+							function() {
+								var curcir = this;
+								d3
+										.select(".dots")
+										.selectAll("circle")
+										.transition()
+										.style(
+												'opacity',
+												function() {
+													//alert("in");
+													return (this == curcir || d3
+															.select(this)
+															.select("title")
+															.text() == circleText)
+															? 1.0
+															: 0.5;
+												});
+
+							})
+					.on(
+							'mouseleave',
+							function() {
+								//alert("out");
+
+								d3
+										.select(".dots")
+										.selectAll("circle")
+										.transition()
+										.style(
+												'opacity',
+												function() {
+													if (circleText.length)
+														return (d3
+																.select(this)
+																.select("title")
+																.text() == circleText)
+																? 1.0
+																: 0.5;
+													else
+														return 1.0;
+												});
+
+							}).style("fill", function(d) {
+						return colorScale(color(d));
+					}).call(position).sort(order);
+
+			// 			jQuery("circle").on('mouseover', function() {
+			// 				var curcir = this;
+			// 				d3.selectAll('circle').transition().style('opacity', function() {
+			// 					//alert("in");
+			// 					return (this == curcir) ? 1.0 : 0.5;
+			// 				});
+			// 			}).on('mouseleave', function() {
+			// 				//alert("out");
+			// 				d3.selectAll('circle').transition().style('opacity', 1.0);
+			// 			});
+
+			// Add a title.
+			dot.append("title").text(function(d) {
+				return d.sno;
+			});
+
+			// Add an overlay for the year label.
+			var box = label.node().getBBox();
+
+			// // Load the data.
+			// d3.json("nations.json", function(nations) {
+			var overlay = svg.append("rect").attr("class", "overlay").attr("x",
+					box.x).attr("y", box.y).attr("width", box.width).attr(
+					"height", box.height).on("mouseover", enableInteraction);
+
+			var tt = 15000;
+			if (g != '0')
+				tt = 5000;
+
+			// Start a transition that interpolates the data based on year.
+			svg.transition().duration(tt).ease("linear").tween("year",
+					tweenYear).each("end", enableInteraction);
+
+			// Positions the dots based on data.
+			function position(dot) {
+				dot.attr("cx", function(d) {
+					return xScale(x(d));
+				}).attr("cy", function(d) {
+					return yScale(y(d));
+				}).attr("r", function(d) {
+					return radiusScale(radius(d));
+				});
+			}
+
+			// Defines a sort order so that the smallest dots are drawn on top.
+			function order(a, b) {
+				return radius(b) - radius(a);
+			}
+
+			// After the transition finishes, you can mouseover to change the year.
+			function enableInteraction() {
+				var yearScale = d3.scale.linear().domain([-6000, 2014]).range(
+						[box.x + 10, box.x + box.width - 10]).clamp(true);
+
+				// Cancel the current transition, if any.
+				svg.transition().duration(0);
+
+				overlay.on("mouseover", mouseover).on("mouseout", mouseout).on(
+						"mousemove", mousemove).on("touchmove", mousemove);
+
+				function mouseover() {
+					label.classed("active", true);
+				}
+
+				function mouseout() {
+					label.classed("active", false);
+				}
+
+				function mousemove() {
+					var y = yearScale.invert(d3.mouse(this)[0]);
+					displayYear(y);
+				}
+			}
+
+			function convertYear(y) {
+				var ry = 0;
+				if (y < -5250)
+					ry = 1;
+				else if (y < -4501)
+					ry = 2;
+				else if (y < -3001)
+					ry = 3;
+				else if (y < -2001)
+					ry = 4;
+				else if (y < -1201)
+					ry = 5;
+				else if (y < -601)
+					ry = 6;
+				else if (y < -201)
+					ry = 7;
+				else if (y < 1301)
+					ry = 8;
+				else if (y < 2015)
+					ry = 9;
+				return ry;
+			}
+
+			// Tweens the entire chart by first tweening the year, and then the data.
+			// For the interpolated data, the dots and label are redrawn.
+			function tweenYear() {
+				var year = d3.interpolateNumber(-6000, 2014);
+				return function(t) {
+					displayYear(year(t));
+				};
+			}
+
+			// Updates the display to show the specified year.
+			function displayYear(year) {
+				dot.data(interpolateData(year), key).call(position).sort(order);
+
+				var ap = "";
+				if (year < 0)
+					ap = " B.C.";
+				else if (year > 0)
+					ap = " A.C.";
+				//label.text(emn[convertYear(year)-1]);
+				label.text(Math.round(year) + ap);
+			}
+
+			// Interpolates the dataset for the given (fractional) year.
+			function interpolateData(year) {
+				return secv.map(function(d) {
+					return {
+						sno : d.sno,
+						gp : d.gp,
+						x : interpolateValues(d.x, year),//convertYear(year)),
+						cts : interpolateValues(d.cts, year),//convertYear(year)),
+						y : interpolateValues(d.y, year),//convertYear(year)),
+					};
+				});
+			}
+
+			// Finds (and possibly interpolates) the value for the specified year.
+			function interpolateValues(values, year) {
+				var i = bisect.left(values, year, 0, values.length - 1), a = values[i];
+				if (i > 0) {
+					var b = values[i - 1], t = (year - a[0]) / (b[0] - a[0]);
+					return a[1] * (1 - t) + b[1] * t;
+				}
+				return a[1];
+			}
+			// 		});
+		}
+	}
+</script>
+<script>
+	GoogleAnalyticsObject = "ga", ga = function() {
+		ga.q.push(arguments);
+	}, ga.q = [], ga.l = +new Date;
+	ga("create", "UA-48272912-3", "ocks.org");
+	ga("send", "pageview");
+</script>
+<script async src="//www.google-analytics.com/analytics.js"></script>
